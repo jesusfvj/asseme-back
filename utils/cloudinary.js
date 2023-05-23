@@ -10,18 +10,8 @@ cloudinary.config({
 
 const uploadImage = async (filePath) => {
     return await cloudinary.uploader.upload(filePath, {
-        folder: "muze-image_file-folder",
+        folder: "ASSEME_file-folder",
         colors: true
-    })
-}
-
-const uploadSong = async (filePath) => {
-    return await cloudinary.uploader.upload(filePath, {
-        folder: "muze-song_file-folder",
-        resource_type: 'video',
-        format: 'mp3',
-        use_filename: true,
-        unique_filename: false
     })
 }
 
@@ -31,6 +21,5 @@ const deleteCloudinaryFile = async (cloudinaryId) => {
 
 module.exports = {
     uploadImage,
-    uploadSong,
     deleteCloudinaryFile
 }

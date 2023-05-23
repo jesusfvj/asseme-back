@@ -2,16 +2,11 @@ require("dotenv").config();
 const mongoose = require("mongoose");
 const nodemailer = require("nodemailer");
 const bcrypt = require("bcryptjs");
-const fs = require("fs-extra");
 const User = require("../models/User");
 const {
   uuid
 } = require("uuidv4");
 const generateJWT = require("../helpers/generateJWT");
-const {
-  uploadImage,
-  deleteCloudinaryFile
-} = require("../utils/cloudinary");
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -35,7 +30,55 @@ const register = async (req, res) => {
     from: "asseme.gifs.memes@gmail.com",
     to: email,
     subject: "ASSEME welcomes you!",
-    text: `Hi ${name}, thanks for registering Muze!`,
+    html: `<html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          text-align: center;
+          margin-top: 50px;
+        }
+        
+        h1 {
+          color: #333;
+          font-size: 24px;
+          margin-bottom: 20px;
+        }
+        
+        p {
+          color: #666;
+          font-size: 16px;
+          margin-bottom: 10px;
+        }
+        
+        .gratitude {
+          font-style: italic;
+          color: #999;
+          font-size: 14px;
+        }
+      </style>
+    </head>
+    <body>
+      <h1>Welcome to ASSEME ${name}!</h1>
+      <p>Thank you for registering in ASSEME. Please find below the top 10 GIFs and memes of the week:</p>
+      
+      <div>
+  <img src="https://example.com/meme1.jpg" alt="Meme 1">
+  <img src="https://example.com/meme2.jpg" alt="Meme 2">
+  <img src="https://example.com/meme3.jpg" alt="Meme 3">
+  <img src="https://example.com/meme4.jpg" alt="Meme 4">
+  <img src="https://example.com/meme5.jpg" alt="Meme 5">
+  <img src="https://example.com/meme6.jpg" alt="Meme 6">
+  <img src="https://example.com/meme7.jpg" alt="Meme 7">
+  <img src="https://example.com/meme8.jpg" alt="Meme 8">
+  <img src="https://example.com/meme9.jpg" alt="Meme 9">
+  <img src="https://example.com/meme10.jpg" alt="Meme 10">
+</div>
+    
+      <p class="gratitude">Thank you for your support! Goodbye.</p>
+    </body>
+    </html>`,
   };
 
     if (password !== repPassword) {
@@ -150,8 +193,63 @@ const logInUser = async (req, res) => {
   }
 };
 
+const getUserById = async (req, res) => {
+  const { userId } = req.params;
+
+  if (userId.length !== 24) {
+    return res.status(200).json({
+      ok: false,
+    });
+  }
+
+  try {
+    const user = await User.findOne({
+      _id: userId,
+    },{
+      __v: 0,
+      password: 0
+    })
+     /*  .populate("playlists")
+      .populate("followedPlaylists")
+      .populate({
+        path: "tracks",
+        populate: {
+          path: "artist",
+        },
+      })
+      .populate({ path: "albums", populate: { path: "artist" }, populate: {path: "songs"} })
+      .populate("following")
+      .populate({
+        path: "playerQueue",
+        populate: {
+          path: "tracks",
+          populate: {
+            path: "artist",
+          },
+        },
+      }); */
+
+    if (!user) {
+      return res.status(200).json({
+        ok: false,
+      });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      user,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(503).json({
+      ok: false,
+      msg: `Could not find the user with the id: ${userId}`,
+    });
+  }
+};
 
 module.exports = {
   register,
-  logInUser
+  logInUser,
+  getUserById
 };

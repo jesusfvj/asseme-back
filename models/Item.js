@@ -11,6 +11,11 @@ const itemSchema = new mongoose.Schema({
     default: "gif",
     required: true,
   },
+  keywords: {
+    type: [String],
+    default: [],
+    required: true,
+  },
   itemUrl: {
     type: String,
     required: true,
