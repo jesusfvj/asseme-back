@@ -81,49 +81,49 @@ const register = async (req, res) => {
     </html>`,
   };
 
-    if (password !== repPassword) {
-      return res.status(400).json({
-        ok: false,
-        message: "Passwords do not match",
-      });
-    }
-
-    const user = await User.findOne({
-      email,
+  if (password !== repPassword) {
+    return res.status(400).json({
+      ok: false,
+      message: "Passwords do not match",
     });
+  }
 
-    if (user) {
-      return res.status(409).json({
-        ok: false,
-        message: "User already exists",
-      });
-    }
+  const user = await User.findOne({
+    email,
+  });
 
-    const salt = bcrypt.genSaltSync(10);
-    const hashedPassword = bcrypt.hashSync(password, salt);
-
-    const newUser = new User({
-      email,
-      password: hashedPassword,
-      name,
-      lastName,
-      age,
-      role: "user",
+  if (user) {
+    return res.status(409).json({
+      ok: false,
+      message: "User already exists",
     });
+  }
 
-    await newUser.save();
-    newUser.password = undefined;
+  const salt = bcrypt.genSaltSync(10);
+  const hashedPassword = bcrypt.hashSync(password, salt);
 
-    const token = await generateJWT(newUser._id);
+  const newUser = new User({
+    email,
+    password: hashedPassword,
+    name,
+    lastName,
+    age,
+    role: "user",
+  });
 
-    try {
-      transporter.sendMail(mailOptions, function (error, info) {
-        if (error) {
-          console.log(error);
-        } else {
-          console.log("Email sent: " + info.response);
-        }
-      });
+  await newUser.save();
+  newUser.password = undefined;
+
+  const token = await generateJWT(newUser._id);
+
+  try {
+    transporter.sendMail(mailOptions, function (error, info) {
+      if (error) {
+        console.log(error);
+      } else {
+        console.log("Email sent: " + info.response);
+      }
+    });
 
     return res.status(201).json({
       ok: true,
@@ -147,10 +147,54 @@ const logInUser = async (req, res) => {
     password
   } = req.body;
   try {
-    const userFromDb = await User.findOne({
-      email,
-    })
-    /* .populate("playlists") */
+
+    const userFromDbArray = await User.aggregate([{
+      $match: {
+        email,
+      }
+    },
+    {
+      $project: {
+        __v: 0,
+        profilePhotoCloudinaryId: 0,
+        role: 0
+      }
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "following",
+        foreignField: "_id",
+        as: "following"
+      }
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "followedBy",
+        foreignField: "_id",
+        as: "followers"
+      }
+    },
+    {
+      $lookup: {
+        from: "items",
+        localField: "uploadedItems",
+        foreignField: "_id",
+        as: "followers"
+      }
+    },
+    {
+      $lookup: {
+        from: "items",
+        localField: "lovedItems",
+        foreignField: "_id",
+        as: "lovedItems"
+      }
+    },
+  ]);
+
+  const userFromDb = userFromDbArray[0]
 
     if (!userFromDb) {
       return res.status(400).json({
@@ -180,7 +224,7 @@ const logInUser = async (req, res) => {
     return res.status(200).json({
       ok: true,
       user: {
-        ...userFromDb._doc,
+        ...userFromDb,
         token
       },
     });
@@ -194,7 +238,9 @@ const logInUser = async (req, res) => {
 };
 
 const getUserById = async (req, res) => {
-  const { userId } = req.params;
+  const {
+    userId
+  } = req.params;
 
   if (userId.length !== 24) {
     return res.status(200).json({
@@ -203,31 +249,51 @@ const getUserById = async (req, res) => {
   }
 
   try {
-    const user = await User.findOne({
-      _id: userId,
-    },{
-      __v: 0,
-      password: 0
-    })
-     /*  .populate("playlists")
-      .populate("followedPlaylists")
-      .populate({
-        path: "tracks",
-        populate: {
-          path: "artist",
-        },
-      })
-      .populate({ path: "albums", populate: { path: "artist" }, populate: {path: "songs"} })
-      .populate("following")
-      .populate({
-        path: "playerQueue",
-        populate: {
-          path: "tracks",
-          populate: {
-            path: "artist",
-          },
-        },
-      }); */
+    const user = await User.aggregate([{
+        $match: {
+          _id: userId,
+        }
+      },
+      {
+        $project: {
+          __v: 0,
+          password: 0,
+          profilePhotoCloudinaryId: 0
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "following",
+          foreignField: "_id",
+          as: "following"
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "followedBy",
+          foreignField: "_id",
+          as: "followers"
+        }
+      },
+      {
+        $lookup: {
+          from: "items",
+          localField: "uploadedItems",
+          foreignField: "_id",
+          as: "followers"
+        }
+      },
+      {
+        $lookup: {
+          from: "items",
+          localField: "lovedItems",
+          foreignField: "_id",
+          as: "lovedItems"
+        }
+      },
+    ]);
 
     if (!user) {
       return res.status(200).json({
@@ -248,8 +314,75 @@ const getUserById = async (req, res) => {
   }
 };
 
+const getUsers = async (req, res) => {
+  try {
+    const users = await User.aggregate([{
+        $match: {}
+      },
+      {
+        $project: {
+          __v: 0,
+          password: 0,
+          profilePhotoCloudinaryId: 0,
+          role: 0
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "following",
+          foreignField: "_id",
+          as: "following"
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "followedBy",
+          foreignField: "_id",
+          as: "followers"
+        }
+      },
+      {
+        $lookup: {
+          from: "items",
+          localField: "uploadedItems",
+          foreignField: "_id",
+          as: "followers"
+        }
+      },
+      {
+        $lookup: {
+          from: "items",
+          localField: "lovedItems",
+          foreignField: "_id",
+          as: "lovedItems"
+        }
+      },
+    ]);
+
+    if (!users) {
+      return res.status(200).json({
+        ok: false,
+      });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      users,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(503).json({
+      ok: false,
+      message: `Could not find the user with the id: ${userId}`,
+    });
+  }
+};
+
 module.exports = {
   register,
   logInUser,
-  getUserById
+  getUserById,
+  getUsers
 };

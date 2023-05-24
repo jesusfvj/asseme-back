@@ -15,7 +15,7 @@ const upload = multer({
   dest: "./uploads"
 });
 
-itemRouter.post("/uploadItems/:userId", checkJWT, upload.any(), uploadItems);
+itemRouter.post("/uploaditems/:userId", checkJWT, upload.any(), uploadItems);
 itemRouter.post("/uploaditemurl/:userId", checkJWT, uploadItemUrl);
 itemRouter.get("/getitems", getItems);
 itemRouter.get("/gettopitems", getTopItems);

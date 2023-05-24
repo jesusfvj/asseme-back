@@ -21,6 +21,8 @@ const uploadItems = async (req, res) => {
         const dataFiles = req.body;
         const userId = req.params.userId;
 
+        console.log(userId)
+
         if (!req.files) {
             return res.status(503).json({
                 ok: false,
@@ -29,7 +31,7 @@ const uploadItems = async (req, res) => {
         }
 
         if (req.files) {
-            const arrayIdItems = [];
+            let arrayIdItems = [];
             const files = req.files
             await Promise.all(
                 files.map(async (item, index) => {
