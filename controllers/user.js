@@ -84,7 +84,7 @@ const register = async (req, res) => {
     if (password !== repPassword) {
       return res.status(400).json({
         ok: false,
-        msg: "Passwords do not match",
+        message: "Passwords do not match",
       });
     }
 
@@ -95,7 +95,7 @@ const register = async (req, res) => {
     if (user) {
       return res.status(409).json({
         ok: false,
-        msg: "User already exists",
+        message: "User already exists",
       });
     }
 
@@ -136,7 +136,7 @@ const register = async (req, res) => {
     console.log(error);
     return res.status(503).json({
       ok: false,
-      msg: "Oops, we could not save your data",
+      message: "Oops, we could not save your data",
     });
   }
 };
@@ -155,14 +155,14 @@ const logInUser = async (req, res) => {
     if (!userFromDb) {
       return res.status(400).json({
         ok: false,
-        msg: "Email and password don't match.",
+        message: "Email and password don't match.",
       });
     }
 
     if (userFromDb.isBanned === true) {
       return res.status(200).json({
         ok: false,
-        msg: "Your account has being banned due to the violation of our company policy. Please contact us for further information.",
+        message: "Your account has being banned due to the violation of our company policy. Please contact us for further information.",
       });
     }
 
@@ -171,7 +171,7 @@ const logInUser = async (req, res) => {
     if (!comparedPassword) {
       return res.status(400).json({
         ok: false,
-        msg: "Email and password don't match.",
+        message: "Email and password don't match.",
       });
     }
 
@@ -188,7 +188,7 @@ const logInUser = async (req, res) => {
     console.log(error);
     return res.status(503).json({
       ok: false,
-      msg: "Oops, we could not verify your data",
+      message: "Oops, we could not verify your data",
     });
   }
 };
@@ -243,7 +243,7 @@ const getUserById = async (req, res) => {
     console.log(error);
     return res.status(503).json({
       ok: false,
-      msg: `Could not find the user with the id: ${userId}`,
+      message: `Could not find the user with the id: ${userId}`,
     });
   }
 };

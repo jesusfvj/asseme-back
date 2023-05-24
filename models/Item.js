@@ -21,12 +21,12 @@ const itemSchema = new mongoose.Schema({
     required: true,
   },
   itemCloudinaryId: {
-    type: String,
-    required: true,
+    type: String
   },
   lovedBy: {
     type: [mongoose.Schema.Types.ObjectId],
     ref: "User",
+    default: []
   },
   createdAt: {
     type: Date,

@@ -4,7 +4,11 @@ const multer = require("multer");
 const checkJWT = require("../middlewares/checkJWT");
 const {
   uploadItems,
-  /* uploadItemUrl */
+  uploadItemUrl,
+  getItems,
+  getTopItems,
+  deleteItem,
+  editItem
 } = require("../controllers/item");
 
 const upload = multer({
@@ -12,6 +16,10 @@ const upload = multer({
 });
 
 itemRouter.post("/uploadItems/:userId", checkJWT, upload.any(), uploadItems);
-/* itemRouter.post("/uploadItemUrl", checkJWT, uploadItemUrl); */
+itemRouter.post("/uploaditemurl/:userId", checkJWT, uploadItemUrl);
+itemRouter.get("/getitems", getItems);
+itemRouter.get("/gettopitems", getTopItems);
+itemRouter.post("/deleteitem/:itemId", checkJWT, deleteItem);
+itemRouter.put("/edititem/:itemId", checkJWT, editItem);
 
 module.exports = itemRouter;
