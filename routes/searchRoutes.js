@@ -7,6 +7,6 @@ const {
 } = require("../controllers/search");
 
 searchRouter.get("/:query", search);
-searchRouter.get("/searchbyid:query/:userId", checkJWT, searchById);
+searchRouter.get("/searchbyid/:query/:userId", checkJWT, searchById);
 
 module.exports = searchRouter;
