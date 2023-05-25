@@ -14,19 +14,13 @@ Before running the ASSEME backend application, make sure you have Node.js and np
 git clone https://github.com/jesusfvj/asseme-back.git
 ```
 
-2. Navigate to the project's root directory:
-
-```shell
-cd asseme-backend
-```
-
-3. Install the dependencies:
+2. Install the dependencies:
 
 ```shell
 npm install
 ```
 
-4. Set up environment variables:
+3. Set up environment variables:
 
    Create a `.env` file in the project's root directory and include the following variables:
 
@@ -40,7 +34,7 @@ npm install
 
    > Remember to fill in the values for these variables and include them in the `.env` file.
 
-5. Start the server:
+4. Start the server:
 
 ```shell
 npm start
