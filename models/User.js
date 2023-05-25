@@ -53,7 +53,7 @@ const UserSchema = new mongoose.Schema({
   profilePhoto: {
     type: String,
     required: true,
-    default: "https://spanishbit.es/no-profile.jpg",
+    default: "https://res.cloudinary.com/diek1olu2/image/upload/v1684971713/ASSEME%20-%20visual/maddie_creates-jj-ver2_iuwb5e.gif",
   },
   profilePhotoCloudinaryId: {
     type: String,

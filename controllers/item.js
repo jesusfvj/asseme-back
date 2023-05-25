@@ -21,8 +21,6 @@ const uploadItems = async (req, res) => {
         const dataFiles = req.body;
         const userId = req.params.userId;
 
-        console.log(userId)
-
         if (!req.files) {
             return res.status(503).json({
                 ok: false,

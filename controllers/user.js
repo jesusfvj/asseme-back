@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const nodemailer = require("nodemailer");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
+const Item = require("../models/Item");
 const {
   uuid
 } = require("uuidv4");
@@ -25,6 +26,34 @@ const register = async (req, res) => {
     password,
     repPassword
   } = req.body;
+
+  const topTenItems = await Item.aggregate([{
+      $match: {}
+    },
+    {
+      $project: {
+        __v: 0,
+        password: 0,
+        itemCloudinaryId: 0,
+        name: 0,
+        type: 0,
+        keywords: 0,
+        itemCloudinaryId: 0,
+        lovedBy: 0,
+        createdAt: 0,
+        owner: 0,
+        isBanned: 0,
+      }
+    },
+    {
+      $sort: {
+        lovedBy: -1
+      }
+    },
+    {
+      $limit: 10
+    }
+  ]);
 
   const mailOptions = {
     from: "asseme.gifs.memes@gmail.com",
@@ -51,6 +80,21 @@ const register = async (req, res) => {
           font-size: 16px;
           margin-bottom: 10px;
         }
+
+        .url-container{
+          display: flex;
+          row-gap: 0.5rem
+          flex-wrap: wrap;
+          justify-content: center;
+          padding-left: 10px;
+          padding-right: 10px;
+        }
+
+        .img{
+          height: auto
+          width: auto
+          object-fit: contain;
+        }
         
         .gratitude {
           font-style: italic;
@@ -63,17 +107,17 @@ const register = async (req, res) => {
       <h1>Welcome to ASSEME ${name}!</h1>
       <p>Thank you for registering in ASSEME. Please find below the top 10 GIFs and memes of the week:</p>
       
-      <div>
-  <img src="https://example.com/meme1.jpg" alt="Meme 1">
-  <img src="https://example.com/meme2.jpg" alt="Meme 2">
-  <img src="https://example.com/meme3.jpg" alt="Meme 3">
-  <img src="https://example.com/meme4.jpg" alt="Meme 4">
-  <img src="https://example.com/meme5.jpg" alt="Meme 5">
-  <img src="https://example.com/meme6.jpg" alt="Meme 6">
-  <img src="https://example.com/meme7.jpg" alt="Meme 7">
-  <img src="https://example.com/meme8.jpg" alt="Meme 8">
-  <img src="https://example.com/meme9.jpg" alt="Meme 9">
-  <img src="https://example.com/meme10.jpg" alt="Meme 10">
+      <div class="url-container">
+  <img class="img" src="${topTenItems[0].itemUrl}" alt="Meme 1">
+  <img class="img" src="${topTenItems[1].itemUrl}" alt="Meme 2">
+  <img class="img" src="${topTenItems[2].itemUrl}" alt="Meme 3">
+  <img class="img" src="${topTenItems[3].itemUrl}" alt="Meme 4">
+  <img class="img" src="${topTenItems[4].itemUrl}" alt="Meme 5">
+  <img class="img" src="${topTenItems[5].itemUrl}" alt="Meme 6">
+  <img class="img" src="${topTenItems[6].itemUrl}" alt="Meme 7">
+  <img class="img" src="${topTenItems[7].itemUrl}" alt="Meme 8">
+  <img class="img" src="${topTenItems[8].itemUrl}" alt="Meme 9">
+  <img class="img" src="${topTenItems[9].itemUrl}" alt="Meme 10">
 </div>
     
       <p class="gratitude">Thank you for your support! Goodbye.</p>
@@ -149,52 +193,52 @@ const logInUser = async (req, res) => {
   try {
 
     const userFromDbArray = await User.aggregate([{
-      $match: {
-        email,
-      }
-    },
-    {
-      $project: {
-        __v: 0,
-        profilePhotoCloudinaryId: 0,
-        role: 0
-      }
-    },
-    {
-      $lookup: {
-        from: "users",
-        localField: "following",
-        foreignField: "_id",
-        as: "following"
-      }
-    },
-    {
-      $lookup: {
-        from: "users",
-        localField: "followedBy",
-        foreignField: "_id",
-        as: "followers"
-      }
-    },
-    {
-      $lookup: {
-        from: "items",
-        localField: "uploadedItems",
-        foreignField: "_id",
-        as: "followers"
-      }
-    },
-    {
-      $lookup: {
-        from: "items",
-        localField: "lovedItems",
-        foreignField: "_id",
-        as: "lovedItems"
-      }
-    },
-  ]);
+        $match: {
+          email,
+        }
+      },
+      {
+        $project: {
+          __v: 0,
+          profilePhotoCloudinaryId: 0,
+          role: 0
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "following",
+          foreignField: "_id",
+          as: "following"
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "followedBy",
+          foreignField: "_id",
+          as: "followers"
+        }
+      },
+      {
+        $lookup: {
+          from: "items",
+          localField: "uploadedItems",
+          foreignField: "_id",
+          as: "followers"
+        }
+      },
+      {
+        $lookup: {
+          from: "items",
+          localField: "lovedItems",
+          foreignField: "_id",
+          as: "lovedItems"
+        }
+      },
+    ]);
 
-  const userFromDb = userFromDbArray[0]
+    const userFromDb = userFromDbArray[0]
 
     if (!userFromDb) {
       return res.status(400).json({
@@ -375,7 +419,58 @@ const getUsers = async (req, res) => {
     console.log(error);
     return res.status(503).json({
       ok: false,
-      message: `Could not find the user with the id: ${userId}`,
+      message: `Something happened`,
+    });
+  }
+};
+
+const toggleFollowing = async (req, res) => {
+  const { artistId, isFollowed } = req.body;
+  const { userId } = req.params;
+
+  try {
+    const loggedUser = await User.findOne({
+      _id: userId,
+    });
+    const followedUser = await User.findOne({
+      _id: artistId,
+    });
+
+    if (isFollowed) {
+      await loggedUser.updateOne({
+        $push: {
+          following: artistId,
+        },
+      });
+      await followedUser.updateOne({
+        $push: {
+          followedBy: userId,
+        },
+      });
+
+    } else {
+      await loggedUser.updateOne({
+        $pull: {
+          following: artistId,
+        },
+      });
+      await followedUser.updateOne({
+        $pull: {
+          followedBy: userId,
+        },
+      });
+
+
+    }
+    return res.status(200).json({
+      ok: true,
+      isFollowed,
+    });
+    
+  } catch (error) {
+    return res.status(503).json({
+      ok: false,
+      msg: "Oops, something happened",
     });
   }
 };
@@ -384,5 +479,6 @@ module.exports = {
   register,
   logInUser,
   getUserById,
-  getUsers
+  getUsers,
+  toggleFollowing
 };
